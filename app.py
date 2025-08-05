@@ -9,7 +9,14 @@ def home():
 @app.route('/generate-apk', methods=['POST'])
 def generate_apk():
     data = request.json
-    app_name = data.get('app_name', 'MyApp')
+    app_name = data.get('app_name', '')
+
+    if app_name != 'ai-generator.apk':
+        return jsonify({
+            "status": "error",
+            "message": "Invalid app name."
+        }), 400
+
     feature = data.get('feature', 'Basic Feature')
 
     return jsonify({
