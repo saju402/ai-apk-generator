@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import time
 
 app = Flask(__name__)
 
@@ -12,13 +13,13 @@ def generate_apk():
     app_name = data.get('app_name', 'MyApp')
     feature = data.get('feature', 'Basic Feature')
 
+    time.sleep(3)
+
     return jsonify({
         "status": "success",
-        "message": f"APK generated for {app_name} with feature: {feature}",
-        "apk_url": "https://dummy-download-link.com/app.apk"
+        "message": f"{app_name} generated successfully with {feature}",
+        "apk_url": f"https://your-ai-server.com/apks/{app_name.lower().replace(' ', '_')}.apk"
     })
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=10000)
