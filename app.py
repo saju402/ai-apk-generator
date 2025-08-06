@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-import os  # ये जरूरी है Render ke PORT के लिए
 
 app = Flask(__name__)
 
@@ -18,34 +17,8 @@ def generate_apk():
         "message": f"APK generated for {app_name} with feature: {feature}",
         "apk_url": "https://dummy-download-link.com/app.apk"
     })
-@app.route('/parse-prompt', methods=['POST'])
-def parse_prompt():
-    data = request.json
-    prompt = data.get('prompt', '')
 
-    parsed = {
-        "app_name": "Violence AI Studio",
-        "features": ["text-to-video", "voiceover", "text-to-image"]
-    }
-
-    return jsonify({
-        "status": "success",
-        "parsed_data": parsed
-        @app.route('/create-apk', methods=['POST'])
-def create_apk():
-    data = request.json
-    app_name = data.get('app_name', 'My AI App')
-    features = data.get('features', [])
-
-    apk_link = f"https://dummy-apk-link.com/{app_name.replace(' ', '_')}.apk"
-
-    return jsonify({
-        "status": "success",
-        "app_name": app_name,
-        "features_included": features,
-        "apk_url": apk_link
-    })
-    })
 if __name__ == '__main__':
-    # Render par port fix nahi hota, isliye env se lena padta hai
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    import os
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
