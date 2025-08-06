@@ -31,6 +31,20 @@ def parse_prompt():
     return jsonify({
         "status": "success",
         "parsed_data": parsed
+        @app.route('/create-apk', methods=['POST'])
+def create_apk():
+    data = request.json
+    app_name = data.get('app_name', 'My AI App')
+    features = data.get('features', [])
+
+    apk_link = f"https://dummy-apk-link.com/{app_name.replace(' ', '_')}.apk"
+
+    return jsonify({
+        "status": "success",
+        "app_name": app_name,
+        "features_included": features,
+        "apk_url": apk_link
+    })
     })
 if __name__ == '__main__':
     # Render par port fix nahi hota, isliye env se lena padta hai
