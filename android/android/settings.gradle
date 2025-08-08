@@ -1,2 +1,2 @@
-rootProject.name = "MyGeneratedApp"
+rootProject.name = "AIApp"
 include ':app'
