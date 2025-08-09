@@ -21,10 +21,12 @@ jobs:
           distribution: 'temurin'
 
       - name: Give Gradlew permission
-        run: chmod +x gradlew
+        run: chmod +x android-template/gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace --info
+        run: |
+          cd android-template
+          ./gradlew assembleDebug --stacktrace --info
 
       - name: Find APK files
         run: find . -name "*.apk"
@@ -33,4 +35,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: hello-world-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: android-template/app/build/outputs/apk/debug/app-debug.apk
