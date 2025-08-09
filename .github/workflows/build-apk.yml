@@ -28,11 +28,27 @@ jobs:
       - name: Give gradlew permission
         run: chmod +x ./gradlew
 
+      # ===== Sahi Build Command =====
+      # Yahan ek hi command rakho, jis module ka APK bana rahe ho:
+      # Agar module ka naam "app" hai:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK
-  uses: actions/upload-artifact@v4
-  with:
-    name: app-debug.apk
-    path: app/build/outputs/apk/debug/app-debug.apk
+      # Agar module ka naam 'android-app-generator' hai (ya kuch aur), is line ko rakho:
+      # - name: Build Debug APK
+      #   run: ./gradlew :android-app-generator:assembleDebug
+
+      # ===== Sahi Artifact Upload =====
+      # Agar APK path "app/build/outputs/apk/debug/app-debug.apk" hai (default app module)
+      - name: Upload APK (app module)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      # Agar APK kisi custom module/folder (e.g., android-app-generator) me hai, to yeh step bhi laga lo:
+      - name: Upload APK (android-app-generator module)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-app-generator-debug.apk
+          path: android-app-generator/build/outputs/apk/debug/*.apk
