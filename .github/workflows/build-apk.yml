@@ -20,16 +20,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-        working-directory: android-template
-
-      - name: Build APK
-        run: ./gradlew assembleDebug
-        working-directory: android-template
-
-      - name: Show folder structure (debugging)
+      - name: List repo files
         run: ls -R
+
+      - name: Give gradlew permission
+        run: chmod +x android-template/gradlew
+
+      - name: Build APK (Debug mode)
+        run: |
+          cd android-template
+          ./gradlew assembleDebug --stacktrace --info
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
