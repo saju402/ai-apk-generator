@@ -20,16 +20,30 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: List repo files
-        run: ls -R
+      - name: Install Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          unzip cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+      - name: Set ANDROID_HOME
+        run: echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
 
       - name: Give gradlew permission
         run: chmod +x android-template/gradlew
 
-      - name: Build APK (Debug mode)
+      - name: Build APK
         run: |
           cd android-template
           ./gradlew assembleDebug --stacktrace --info
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          PATH: ${{ env.ANDROID_HOME }}/platform-tools:${{ env.ANDROID_HOME }}/cmdline-tools/latest/bin:${{ env.PATH }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
