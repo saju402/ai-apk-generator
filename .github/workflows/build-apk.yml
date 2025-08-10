@@ -9,48 +9,65 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Install Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
 
-      - name: Install Android SDK
+      - name: Install Java JDK 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-8-jdk wget unzip
-          mkdir -p $HOME/android-sdk
-          cd $HOME/android-sdk
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip
-          mkdir -p cmdline-tools/latest
-          mv cmdline-tools/* cmdline-tools/latest/
-          yes | cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-          cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;30.0.3" "platforms;android-30"
+          sudo apt-get install -y openjdk-8-jdk
 
-      - name: Set ANDROID_HOME
+      - name: Install Android SDK
         run: |
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/30.0.3" >> $GITHUB_ENV
+          sudo mkdir -p $ANDROID_HOME
+          sudo apt-get install -y wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd-tools.zip
+          unzip cmd-tools.zip -d $ANDROID_HOME
+          yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-30" "build-tools;30.0.3"
 
       - name: Run APK generation script
         run: python app.py
 
-      - name: Find APK files
+      - name: Compile Java to DEX
+        run: |
+          mkdir -p build
+          javac -source 1.8 -target 1.8 \
+            -bootclasspath $ANDROID_HOME/platforms/android-30/android.jar \
+            -classpath android-template/app \
+            -d build build/MainActivity.java
+          $ANDROID_HOME/build-tools/30.0.3/dx --dex --output=build/classes.dex build
+
+      - name: Package into APK
         run: |
           mkdir -p output
-          find . -name "*.apk" -exec cp {} output/ \; || echo "No APK found"
+          cd build
+          aapt package -f -m -F ../output/app.unaligned.apk \
+            -M ../android-template/app/src/main/AndroidManifest.xml \
+            -I $ANDROID_HOME/platforms/android-30/android.jar \
+            -S ../android-template/app/src/main/res \
+            -J .
+          cd ..
+          $ANDROID_HOME/build-tools/30.0.3/aapt add output/app.unaligned.apk build/classes.dex
+          $ANDROID_HOME/build-tools/30.0.3/apksigner sign --ks my-release-key.jks --ks-pass pass:123456 output/app.unaligned.apk
+          mv output/app.unaligned.apk output/final-app.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: built-apk
-          path: output/*.apk
+          path: output/final-app.apk
