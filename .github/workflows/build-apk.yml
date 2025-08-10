@@ -19,11 +19,11 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Give Gradlew permission
-        run: chmod +x gradlew
+      - name: Install Gradle
+        uses: gradle/gradle-build-action@v2
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: gradle assembleDebug
 
       - name: Find APK files
         run: |
