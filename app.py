@@ -1,12 +1,26 @@
 import os
-import time
+import subprocess
+import shutil
 
-def generate_android_code(app_name, feature):
-    folder_name = app_name.lower().replace(" ", "_")
-    os.makedirs(folder_name, exist_ok=True)
+APP_NAME = "MyApp"
+FEATURE = "Basic Feature"
+PACKAGE = "com.example.myapp"
 
+# Paths
+TEMPLATE_DIR = "android-template/app"
+BUILD_DIR = "build"
+APK_OUTPUT_DIR = "output"
+JAVA_FILE = os.path.join(BUILD_DIR, "MainActivity.java")
+
+def prepare_folders():
+    shutil.rmtree(BUILD_DIR, ignore_errors=True)
+    shutil.rmtree(APK_OUTPUT_DIR, ignore_errors=True)
+    os.makedirs(BUILD_DIR, exist_ok=True)
+    os.makedirs(APK_OUTPUT_DIR, exist_ok=True)
+
+def generate_java_code():
     java_code = f"""
-package com.example.{folder_name};
+package {PACKAGE};
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -17,18 +31,47 @@ public class MainActivity extends Activity {{
     protected void onCreate(Bundle savedInstanceState) {{
         super.onCreate(savedInstanceState);
         TextView tv = new TextView(this);
-        tv.setText("{app_name} - Feature: {feature}");
+        tv.setText("{APP_NAME} - Feature: {FEATURE}");
         setContentView(tv);
     }}
 }}
 """
-    java_path = f"{folder_name}/MainActivity.java"
-    with open(java_path, "w") as f:
+    with open(JAVA_FILE, "w") as f:
         f.write(java_code)
 
+def build_apk():
+    # Compile Java to class
+    subprocess.run([
+        "javac", "-source", "1.8", "-target", "1.8",
+        "-bootclasspath", "/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar",
+        "-classpath", TEMPLATE_DIR,
+        "-d", BUILD_DIR,
+        JAVA_FILE
+    ], check=True)
+
+    # Convert to DEX
+    subprocess.run([
+        "d8", "--output", BUILD_DIR, os.path.join(BUILD_DIR, "MainActivity.class")
+    ], check=True)
+
+    # Package APK
+    apk_path = os.path.join(APK_OUTPUT_DIR, f"{APP_NAME}.apk")
+    subprocess.run([
+        "aapt", "package", "-f", "-M", os.path.join(TEMPLATE_DIR, "AndroidManifest.xml"),
+        "-I", "/usr/lib/android-sdk/platforms/android-30/android.jar",
+        "-F", apk_path,
+        BUILD_DIR
+    ], check=True)
+
+    # Sign APK
+    subprocess.run([
+        "apksigner", "sign", "--ks", "debug.keystore",
+        "--ks-pass", "pass:android", apk_path
+    ], check=True)
+
+    print(f"✅ APK Generated: {apk_path}")
+
 if __name__ == "__main__":
-    app_name = "MyApp"
-    feature = "Basic Feature"
-    generate_android_code(app_name, feature)
-    time.sleep(3)
-    print(f"✅ {app_name} generated successfully with {feature}")
+    prepare_folders()
+    generate_java_code()
+    build_apk()
