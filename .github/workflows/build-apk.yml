@@ -24,12 +24,13 @@ jobs:
           pip install --upgrade pip
 
       - name: Run APK generation script
+        working-directory: .
         run: python app.py
 
       - name: Find APK files
         run: |
           mkdir -p output
-          find . -name "*.apk" -exec cp {} output/ \; || echo "No APK found"
+          find android-template/app -name "*.apk" -exec cp {} output/ \; || echo "No APK found"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
