@@ -1,2 +1,3 @@
-rootProject.name = "HelloWorldApp"
-include ':app'
+rootProject.name = "MyApp"
+include(":app")
+project(":app").projectDir = file("android-template/app")
